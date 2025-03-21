@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>为爱掷🎲</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      touch-action: manipulation;
+    }
+    .emoji-img {
+      width: 1em;
+      height: 1em;
+      vertical-align: -0.1em;
+      display: inline-block;
+    }
+    .dice {
+      transition: transform 0.8s ease-out;
+    }
+    .shake {
+      animation: shake 0.5s ease-in-out;
+    }
+    @keyframes shake {
+      0% { transform: rotate(0deg); }
+      20% { transform: rotate(-15deg) translateY(-10px); }
+      40% { transform: rotate(15deg) translateY(5px); }
+      60% { transform: rotate(-15deg) translateY(-5px); }
+      80% { transform: rotate(5deg) translateY(10px); }
+      100% { transform: rotate(0deg); }
+    }
+    .dice-container {
+      perspective: 600px;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 p-4 md:p-6 flex items-center justify-center">
+  <div class="container max-w-4xl mx-auto">
+    <h1 class="text-center text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-6">为爱掷<img src="https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/1f3b2.png" alt="🎲" class="emoji-img"></h1>
+    
+    <div class="bg-slate-800/80 backdrop-blur-sm rounded-xl p-6 shadow-2xl border border-slate-700/50">
+      <div class="flex flex-col md:flex-row gap-6 mb-8">
+        <!-- 玩家1 -->
+        <div class="flex-1 relative">
+          <div class="text-center mb-3 h-16"> <!-- 玩家1标题容器 -->
+            <div class="flex flex-col items-center h-full justify-end">
+              <span id="player1-crown" class="text-2xl"></span>
+              <h3 class="text-xl font-medium text-violet-400 mt-1">梆梆</h3>
+            </div>
+          </div>
+          
+          <div class="dice-container">
+            <div id="player1-dice" class="dice w-28 h-28 md:w-32 md:h-32 mx-auto bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg border-2 border-violet-300 cursor-pointer hover:shadow-violet-500/30 hover:scale-105 transition-all duration-300">
+              <div class="bg-white/90 w-24 h-24 md:w-28 md:h-28 rounded-lg flex items-center justify-center">
+                <span id="player1-value" class="text-6xl text-slate-900 font-bold">?</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-4 text-center">
+            <button id="roll1" class="roll-btn px-6 py-2 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full text-white font-medium shadow-lg transform transition hover:scale-105 hover:shadow-xl active:scale-95">
+              <span class="flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                </svg>
+                投掷骰子
+              </span>
+            </button>
+          </div>
+          
+          <div class="mt-3 text-center text-sm text-slate-400 italic">点击骰子或按钮进行投掷</div>
+          
+          <div class="hidden md:block absolute -left-12 top-1/2 -translate-y-1/2">
+            <div class="text-7xl transform -rotate-12">💡</div>
+          </div>
+        </div>
+        
+        <!-- 分隔线和移动端结果显示 -->
+        <div class="relative">
+          <div class="hidden md:block h-auto w-px bg-gradient-to-b from-transparent via-slate-500/30 to-transparent mx-4"></div>
+          <div class="md:hidden relative">
+            <!-- <div class="h-px w-full bg-gradient-to-r from-transparent via-slate-500/30 to-transparent my-6"></div> -->
+            <!-- 移动端结果显示 -->
+            <div id="result-mobile" class="hidden">
+              <div id="winner-display-mobile" class="text-center flex flex-col items-center"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 桌面端结果显示 -->
+        <div id="result" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hidden">
+          <div id="winner-display" class="text-center flex flex-col items-center"></div>
+        </div>
+        
+        <!-- 玩家2 -->
+        <div class="flex-1 relative">
+          <div class="text-center mb-3 h-16"> <!-- 玩家2标题容器 -->
+            <div class="flex flex-col items-center h-full justify-end">
+              <span id="player2-crown" class="text-2xl"></span>
+              <h3 class="text-xl font-medium text-pink-400 mt-1">呼呼</h3>
+            </div>
+          </div>
+          
+          <div class="dice-container">
+            <div id="player2-dice" class="dice w-28 h-28 md:w-32 md:h-32 mx-auto bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg border-2 border-pink-300 cursor-pointer hover:shadow-pink-500/30 hover:scale-105 transition-all duration-300">
+              <div class="bg-white/90 w-24 h-24 md:w-28 md:h-28 rounded-lg flex items-center justify-center">
+                <span id="player2-value" class="text-6xl text-slate-900 font-bold">?</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-4 text-center">
+            <button id="roll2" class="roll-btn px-6 py-2 bg-gradient-to-r from-pink-600 to-rose-600 rounded-full text-white font-medium shadow-lg transform transition hover:scale-105 hover:shadow-xl active:scale-95">
+              <span class="flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                </svg>
+                投掷骰子
+              </span>
+            </button>
+          </div>
+          
+          <div class="mt-3 text-center text-sm text-slate-400 italic">点击骰子或按钮进行投掷</div>
+          
+          <div class="hidden md:block absolute -right-12 top-1/2 -translate-y-1/2">
+            <div class="text-7xl transform rotate-12">🧩</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 删除这部分
+      <div id="result" class="mt-6 text-center p-4 bg-slate-700/50 rounded-lg hidden">
+        <div id="winner-display" class="text-xl font-medium"></div>
+      </div>
+      -->
+      
+      <div class="mt-8 text-center">
+        <p class="text-sm text-slate-400 mb-2">游戏规则</p>
+        <div class="flex flex-wrap justify-center gap-4 text-xs text-slate-300">
+          <div class="flex items-center gap-1">
+            <span class="h-4 w-4 text-amber-400 font-bold">1.</span>
+            <span>戴👑者且其点数大，可💗</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="h-4 w-4 text-violet-400 font-bold">2.</span>
+            <span>点数相同重新投掷🤝</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span class="h-4 w-4 text-pink-400 font-bold">3.</span>
+            <span>其他情况克制呦💔</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // 获取现有的元素引用
+      const player1Dice = document.getElementById('player1-dice');
+      const player2Dice = document.getElementById('player2-dice');
+      // 添加皇冠元素引用
+      const player1Crown = document.getElementById('player1-crown');
+      const player2Crown = document.getElementById('player2-crown');
+      
+      // 设置皇冠显示
+      const currentDate = new Date().getDate();
+      if (currentDate % 2 === 1) {
+        // 单数日期，玩家一带皇冠
+        player1Crown.textContent = '👑 ';
+      } else {
+        // 双数日期，玩家二带皇冠
+        player2Crown.textContent = '👑 ';
+      }
+      
+      const player1Value = document.getElementById('player1-value');
+      const player2Value = document.getElementById('player2-value');
+      const roll1Button = document.getElementById('roll1');
+      const roll2Button = document.getElementById('roll2');
+      const resultDiv = document.getElementById('result');
+      const resultMobileDiv = document.getElementById('result-mobile');
+      const winnerDisplay = document.getElementById('winner-display');
+      const winnerDisplayMobile = document.getElementById('winner-display-mobile');
+      
+      function checkResults() {
+        const value1 = parseInt(player1Value.textContent);
+        const value2 = parseInt(player2Value.textContent);
+        const isOddDay = new Date().getDate() % 2 === 1;
+        
+        if (!isNaN(value1) && !isNaN(value2) && value1 !== '?' && value2 !== '?') {
+          // 清除之前可能存在的任何特效计时器
+          if (window.effectTimer) {
+            clearTimeout(window.effectTimer);
+          }
+          
+          // 根据屏幕宽度决定显示哪个结果
+          const isMobile = window.innerWidth < 768;
+          const targetDisplay = isMobile ? resultMobileDiv : resultDiv;
+          const targetContent = isMobile ? winnerDisplayMobile : winnerDisplay;
+          
+          // 隐藏另一个显示区域
+          if (isMobile) {
+            resultDiv.classList.add('hidden');
+          } else {
+            resultMobileDiv.classList.add('hidden');
+          }
+          
+          targetDisplay.classList.remove('hidden');
+          
+          let content, className;
+          let shouldTriggerEffect = false;
+          let effectType = '';
+          
+          if (value1 === value2) {
+            content = '<div class="text-[80px] md:text-[96px] mb-2">🤝</div><div class="text-xl font-medium text-amber-400">平局！再来一次吧</div>';
+            className = 'text-center flex flex-col items-center';
+            // 平局不触发特效
+          } else if (value1 > value2) {
+            className = 'text-center flex flex-col items-center';
+            shouldTriggerEffect = true;
+            if (isOddDay) {
+              content = '<div class="text-[80px] md:text-[96px]">💗</div>';
+              effectType = 'unicorn';
+            } else {
+              content = '<div class="text-[80px] md:text-[96px]">💔</div>';
+              effectType = 'snow';
+            }
+          } else {
+            className = 'text-center flex flex-col items-center';
+            shouldTriggerEffect = true;
+            if (!isOddDay) {
+              content = '<div class="text-[80px] md:text-[96px]">💗</div>';
+              effectType = 'unicorn';
+            } else {
+              content = '<div class="text-[80px] md:text-[96px]">💔</div>';
+              effectType = 'snow';
+            }
+          }
+          
+          // 更新显示内容
+          targetContent.innerHTML = content;
+          targetContent.className = className;
+          
+          // 触发特效
+          if (shouldTriggerEffect) {
+            window.effectTimer = setTimeout(() => {
+              if (effectType === 'unicorn') {
+                triggerUnicorn('🎉💗');
+              } else if (effectType === 'snow') {
+                triggerSnow();
+              }
+            }, 100);
+          }
+        }
+      }
+      
+      // 修改重置函数
+      roll1Button.addEventListener('click', () => {
+        player1Value.textContent = '?';
+        resultDiv.classList.add('hidden');
+        resultMobileDiv.classList.add('hidden');
+        rollDice(player1Dice, player1Value);
+      });
+      
+      roll2Button.addEventListener('click', () => {
+        player2Value.textContent = '?';
+        resultDiv.classList.add('hidden');
+        resultMobileDiv.classList.add('hidden');
+        rollDice(player2Dice, player2Value);
+      });
+      
+      function rollDice(playerDice, playerValue) {
+        // 添加摇晃动画
+        playerDice.classList.add('shake');
+        
+        // 显示骰子旋转效果
+        playerDice.style.transform = `rotateY(${Math.random() * 360}deg) rotateX(${Math.random() * 360}deg)`;
+        
+        // 延迟显示结果，制造期待感
+        setTimeout(() => {
+          const result = Math.floor(Math.random() * 6) + 1;
+          playerValue.textContent = result;
+          playerDice.classList.remove('shake');
+          playerDice.style.transform = 'rotateY(0) rotateX(0)';
+          
+          // 检查是否双方都已投掷
+          checkResults();
+        }, 300);
+      }
+      
+      function triggerConfetti() {
+            var defaults = {
+              spread: 360,
+              ticks: 50,
+              gravity: 0,
+              decay: 0.94,
+              startVelocity: 30,
+              colors: ['FFE400', 'FFBD00', 'E89400', 'FFCA6C', 'FDFFB8']
+            };
+        
+            function shoot() {
+              confetti({
+                ...defaults,
+                particleCount: 40,
+                scalar: 1.2,
+                shapes: ['star']
+              });
+        
+              confetti({
+                ...defaults,
+                particleCount: 10,
+                scalar: 0.75,
+                shapes: ['circle']
+              });
+            }
+        
+            setTimeout(shoot, 0);
+            setTimeout(shoot, 100);
+            setTimeout(shoot, 200);
+          }
+          
+          function triggerSnow() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var skew = 1;
+        
+            function randomInRange(min, max) {
+              return Math.random() * (max - min) + min;
+            }
+        
+            (function frame() {
+              var timeLeft = animationEnd - Date.now();
+              var ticks = Math.max(200, 500 * (timeLeft / duration));
+              skew = Math.max(0.8, skew - 0.001);
+        
+              confetti({
+                particleCount: 1,
+                startVelocity: 0,
+                ticks: ticks,
+                origin: {
+                  x: Math.random(),
+                  y: (Math.random() * skew) - 0.2
+                },
+                colors: ['#ffffff'],
+                shapes: ['circle'],
+                gravity: randomInRange(0.4, 0.6),
+                scalar: randomInRange(0.4, 1),
+                drift: randomInRange(-0.4, 0.4)
+              });
+        
+              if (timeLeft > 0) {
+                requestAnimationFrame(frame);
+              }
+            }());
+          }
+          
+          function triggerUnicorn(text) {
+            var scalar = 2;
+            var unicorn = confetti.shapeFromText({ text: text, scalar });
+        
+            var defaults = {
+              spread: 720,
+              ticks: 200,
+              gravity: 1,
+              decay: 0.96,
+              startVelocity: 25,
+              shapes: [unicorn],
+              scalar
+            };
+
+            function shoot() {
+              confetti({
+                ...defaults,
+                particleCount: 130
+              });
+
+              confetti({
+                ...defaults,
+                particleCount: 15,
+                flat: true
+              });
+
+              confetti({
+                ...defaults,
+                particleCount: 15,
+                scalar: scalar / 2,
+                shapes: ['circle']
+              });
+            }
+        
+            setTimeout(shoot, 0);
+            setTimeout(shoot, 100);
+            setTimeout(shoot, 200);
+          }
+      
+      // 点击骰子投掷
+      player1Dice.addEventListener('click', () => {
+        rollDice(player1Dice, player1Value);
+      });
+      
+      player2Dice.addEventListener('click', () => {
+        rollDice(player2Dice, player2Value);
+      });
+      
+      // 删除这部分重复的事件监听器
+      // roll1Button.addEventListener('click', () => {
+      //   player1Value.textContent = '?';
+      //   resultDiv.classList.add('hidden');
+      //   rollDice(player1Dice, player1Value);
+      // });
+      
+      // roll2Button.addEventListener('click', () => {
+      //   player2Value.textContent = '?';
+      //   resultDiv.classList.add('hidden');
+      //   rollDice(player2Dice, player2Value);
+      // });
+      
+      // 为移动设备添加触摸滑动支持
+      let touchStartY;
+      
+      player1Dice.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+      });
+      
+      player1Dice.addEventListener('touchend', (e) => {
+        const touchEndY = e.changedTouches[0].clientY;
+        if (touchStartY - touchEndY > 30) { // 向上滑动
+          rollDice(player1Dice, player1Value);
+        }
+      });
+      
+      player2Dice.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+      });
+      
+      player2Dice.addEventListener('touchend', (e) => {
+        const touchEndY = e.changedTouches[0].clientY;
+        if (touchStartY - touchEndY > 30) { // 向上滑动
+          rollDice(player2Dice, player2Value);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
